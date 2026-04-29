@@ -619,6 +619,9 @@ let lastLandmarks=null;
 
 async function initMediaPipe(){
   try{
+    if(typeof FilesetResolver==='undefined'||typeof HandLandmarker==='undefined'){
+      console.warn('MediaPipe globals not ready'); return;
+    }
     const vision=await FilesetResolver.forVisionTasks(
       'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm'
     );
@@ -630,9 +633,10 @@ async function initMediaPipe(){
       runningMode:'IMAGE',
       numHands:2
     });
+    console.log('MediaPipe ready');
   }catch(e){ console.warn('MediaPipe init failed:',e); }
 }
-initMediaPipe();
+window.addEventListener('load', ()=>initMediaPipe());
 
 function getImageRect(imgEl){
   const cW=imgEl.offsetWidth, cH=imgEl.offsetHeight;
@@ -753,7 +757,7 @@ async function proxyFetch(apiKey, targetUrl, method='GET', body=null){
 
 async function callReplicate(apiKey, imageDataUrl, prompt){
   const pred=await proxyFetch(apiKey, REPLICATE_PREDICT, 'POST',{
-    input:{ prompt, input_image:imageDataUrl, output_format:'webp', safety_tolerance:6 }
+    input:{ prompt, input_image:imageDataUrl, output_format:'jpg', safety_tolerance:6 }
   });
   if(pred.status==='succeeded') return Array.isArray(pred.output)?pred.output[0]:pred.output;
   if(pred.status==='failed') throw new Error(pred.error||'生成に失敗しました');
