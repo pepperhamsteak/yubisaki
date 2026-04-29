@@ -6,6 +6,7 @@
 <title>yubisaki.</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@300;400;500&family=Noto+Sans+JP:wght@300;400&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/vision_bundle.js" crossorigin="anonymous"></script>
 <style>
 :root {
   --cream: #FDF8F5;
@@ -571,7 +572,10 @@ function processBlob(blob){
     hasImage=true;
     const z=document.getElementById('uploadZone');
     z.onclick=null;z.classList.add('filled');
-    z.innerHTML=`<img src="${previewObjectUrl}" alt="hand"><div class="upload-overlay"><button class="change-pill" onclick="resetUpload()">写真を変える</button><span class="preview-badge">選択中</span></div>`;
+    z.innerHTML=`<img id="uploadedImg" src="${previewObjectUrl}" alt="hand"><canvas id="nailCanvas" style="position:absolute;inset:0;width:100%;height:100%;border-radius:16px;pointer-events:none"></canvas><div class="upload-overlay"><button class="change-pill" onclick="resetUpload()">写真を変える</button><span class="preview-badge" id="previewBadge">検出中...</span></div>`;
+    const imgEl=document.getElementById('uploadedImg');
+    const run=()=>detectAndDraw(imgEl,chosenColor);
+    if(imgEl.complete) run(); else imgEl.onload=run;
   };
   img.onerror=()=>showUploadError('画像の読み込みに失敗しました。別のファイルをお試しください。');
   img.src=previewObjectUrl;
@@ -601,11 +605,105 @@ function pick(el,name,color,gel){
   const lbl=document.getElementById('magicLabel');
   if(gel){ ex.classList.add('show'); lbl.textContent='根元を直して仕上げる'; }
   else   { ex.classList.remove('show'); lbl.textContent='保存用に仕上げる'; }
+  updateNailCanvas(color);
 }
 
 function setTab(el){
   document.querySelectorAll('.ftab').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
+}
+
+// ── MEDIAPIPE NAIL TRACKING ───────────────────────────────
+let handLandmarker=null;
+let lastLandmarks=null;
+
+async function initMediaPipe(){
+  try{
+    const vision=await FilesetResolver.forVisionTasks(
+      'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm'
+    );
+    handLandmarker=await HandLandmarker.createFromOptions(vision,{
+      baseOptions:{
+        modelAssetPath:'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task',
+        delegate:'GPU'
+      },
+      runningMode:'IMAGE',
+      numHands:2
+    });
+  }catch(e){ console.warn('MediaPipe init failed:',e); }
+}
+initMediaPipe();
+
+function getImageRect(imgEl){
+  const cW=imgEl.offsetWidth, cH=imgEl.offsetHeight;
+  const r=imgEl.naturalWidth/imgEl.naturalHeight, cr=cW/cH;
+  return r>cr
+    ?{x:0,       y:(cH-cW/r)/2, w:cW,   h:cW/r }
+    :{x:(cW-cH*r)/2, y:0,       w:cH*r, h:cH   };
+}
+
+function drawNailCanvas(canvas, landmarks, imgRect, color){
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  // fingertip / nail-base pairs: [tip, base]
+  [[4,3],[8,7],[12,11],[16,15],[20,19]].forEach(([ti,bi])=>{
+    const tip=landmarks[ti], base=landmarks[bi];
+    const tx=imgRect.x+tip.x*imgRect.w,  ty=imgRect.y+tip.y*imgRect.h;
+    const bx=imgRect.x+base.x*imgRect.w, by=imgRect.y+base.y*imgRect.h;
+    const dx=tx-bx, dy=ty-by;
+    const len=Math.sqrt(dx*dx+dy*dy);
+    const nW=len*0.70, hW=nW/2, hH=len/2, rad=hW*0.55;
+    ctx.save();
+    ctx.translate((tx+bx)/2,(ty+by)/2);
+    ctx.rotate(Math.atan2(dy,dx)-Math.PI/2);
+    ctx.globalAlpha=0.72;
+    ctx.fillStyle=color;
+    ctx.beginPath();
+    ctx.roundRect(-hW,-hH,nW,len,[rad,rad,rad*0.35,rad*0.35]);
+    ctx.fill();
+    // shine
+    ctx.globalAlpha=0.38;
+    ctx.fillStyle='rgba(255,255,255,0.9)';
+    ctx.beginPath();
+    ctx.ellipse(-hW*0.22,-hH*0.28,hW*0.2,hH*0.13,-0.3,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  });
+}
+
+async function detectAndDraw(imgEl, color){
+  const canvas=document.getElementById('nailCanvas');
+  const badge=document.getElementById('previewBadge');
+  if(!canvas) return;
+  canvas.width=imgEl.offsetWidth||imgEl.clientWidth;
+  canvas.height=imgEl.offsetHeight||imgEl.clientHeight;
+  if(!handLandmarker){
+    if(badge) badge.textContent='選択中';
+    return;
+  }
+  try{
+    const res=handLandmarker.detect(imgEl);
+    if(res.landmarks&&res.landmarks.length>0){
+      lastLandmarks=res.landmarks[0];
+      const rect=getImageRect(imgEl);
+      drawNailCanvas(canvas,lastLandmarks,rect,color);
+      if(badge) badge.textContent='プレビュー中';
+    } else {
+      lastLandmarks=null;
+      if(badge) badge.textContent='選択中';
+    }
+  }catch(e){
+    console.warn('nail detect error:',e);
+    if(badge) badge.textContent='選択中';
+  }
+}
+
+function updateNailCanvas(color){
+  const canvas=document.getElementById('nailCanvas');
+  const imgEl=document.getElementById('uploadedImg');
+  if(!canvas||!imgEl||!lastLandmarks) return;
+  const rect=getImageRect(imgEl);
+  drawNailCanvas(canvas,lastLandmarks,rect,color);
 }
 
 // ── COLOR → PROMPT ───────────────────────────────────────
@@ -637,36 +735,28 @@ const PROXY='https://yubisaki-proxy.pepper-ham-steak.workers.dev';
 const REPLICATE_PREDICT='https://api.replicate.com/v1/models/black-forest-labs/flux-kontext-pro/predictions';
 
 async function proxyFetch(apiKey, targetUrl, method='GET', body=null){
-  const opts={
-    method,
-    headers:{'Content-Type':'application/json','X-Replicate-Token':apiKey}
-  };
+  const opts={method,headers:{'Content-Type':'application/json','X-Replicate-Token':apiKey}};
   if(body) opts.body=JSON.stringify(body);
-  const res=await fetch(`${PROXY}?url=${encodeURIComponent(targetUrl)}`,opts);
+  let res;
+  try{ res=await fetch(`${PROXY}?url=${encodeURIComponent(targetUrl)}`,opts); }
+  catch(e){ throw new Error(`接続失敗: ${e.message}`); }
+  const text=await res.text();
   if(!res.ok){
     let msg=`HTTP ${res.status}`;
-    try{ const j=await res.json(); msg=j.detail||j.error||msg; }catch(_){}
+    try{ const j=JSON.parse(text); msg=j.detail||j.error||msg; }catch(_){ msg=text.slice(0,120)||msg; }
     if(res.status===401) msg='APIトークンが無効です。⚙︎ から再設定してください。';
     throw new Error(msg);
   }
-  return res.json();
+  try{ return JSON.parse(text); }
+  catch(e){ throw new Error(`レスポンス解析エラー: ${text.slice(0,120)}`); }
 }
 
 async function callReplicate(apiKey, imageDataUrl, prompt){
-  let pred;
-  try{
-    pred=await proxyFetch(apiKey, REPLICATE_PREDICT, 'POST',{
-      input:{ prompt, input_image:imageDataUrl, output_format:'webp', safety_tolerance:6 }
-    });
-  }catch(e){
-    if(e.message.startsWith('HTTP')||e.message.includes('トークン')) throw e;
-    throw new Error('ネットワークエラー。インターネット接続を確認してください。');
-  }
-
+  const pred=await proxyFetch(apiKey, REPLICATE_PREDICT, 'POST',{
+    input:{ prompt, input_image:imageDataUrl, output_format:'webp', safety_tolerance:6 }
+  });
   if(pred.status==='succeeded') return Array.isArray(pred.output)?pred.output[0]:pred.output;
   if(pred.status==='failed') throw new Error(pred.error||'生成に失敗しました');
-
-  // ポーリング（2秒間隔・最大90秒）
   const pollUrl=pred.urls?.get;
   if(!pollUrl) throw new Error('polling URL が取得できませんでした');
   for(let i=0;i<45;i++){
