@@ -574,8 +574,8 @@ function processBlob(blob){
     z.onclick=null;z.classList.add('filled');
     z.innerHTML=`<img id="uploadedImg" src="${previewObjectUrl}" alt="hand"><canvas id="nailCanvas" style="position:absolute;inset:0;width:100%;height:100%;border-radius:16px;pointer-events:none"></canvas><div class="upload-overlay"><button class="change-pill" onclick="resetUpload()">写真を変える</button><span class="preview-badge" id="previewBadge">検出中...</span></div>`;
     const imgEl=document.getElementById('uploadedImg');
-    const run=()=>detectAndDraw(imgEl,chosenColor);
-    if(imgEl.complete) run(); else imgEl.onload=run;
+    const run=()=>setTimeout(()=>detectAndDraw(imgEl,chosenColor),200);
+    if(imgEl.complete&&imgEl.naturalHeight>0) run(); else imgEl.onload=run;
   };
   img.onerror=()=>showUploadError('画像の読み込みに失敗しました。別のファイルをお試しください。');
   img.src=previewObjectUrl;
