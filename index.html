@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>yubisaki.</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@300;400;500&family=Noto+Sans+JP:wght@300;400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
+<style>
+:root {
+  --cream: #FDF8F5;
+  --blush: #F0D8D2;
+  --rose: #DFA89E;
+  --mauve: #B87080;
+  --berry: #8A4858;
+  --text: #2E1A20;
+  --text-mid: #7A5560;
+  --text-light: #B89AA4;
+  --white: #FFFFFF;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body {
+  background: #E2D8D5;
+  min-height: 100vh;
+  display: flex; justify-content: center;
+  font-family: 'Noto Sans JP', sans-serif;
+}
+.phone {
+  width: 390px; min-height: 100vh;
+  background: var(--cream);
+  display: flex; flex-direction: column;
+}
+
+/* AD TOP */
+.ad-top {
+  background: #1A1015; padding: 7px 18px;
+  display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+}
+.ad-top-text { font-size: 10px; color: #806070; letter-spacing: 0.05em; }
+.ad-top-link { font-size: 10px; color: var(--mauve); }
+
+/* HEADER */
+.header {
+  padding: 18px 20px 14px;
+  display: flex; align-items: flex-end; justify-content: space-between; flex-shrink: 0;
+}
+.logo { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 400; color: var(--berry); letter-spacing: -0.01em; line-height: 1; }
+.logo span { font-weight: 300; color: var(--rose); }
+.logo-sub { font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 300; color: var(--text-light); letter-spacing: 0.12em; margin-top: 4px; }
+.header-right { display: flex; gap: 6px; padding-bottom: 2px; }
+.h-btn {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: var(--white); border: 0.5px solid var(--blush);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 15px; color: var(--mauve); transition: background 0.15s;
+}
+.h-btn:hover { background: var(--blush); }
+
+/* UPLOAD */
+.upload-wrap { padding: 0 18px; flex-shrink: 0; }
+.upload-zone {
+  border: 1.5px dashed var(--rose); border-radius: 18px; height: 115px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+  background: #FFF5F2; cursor: pointer;
+  transition: height 0.35s ease, background 0.2s, border-color 0.2s;
+  position: relative; overflow: hidden;
+}
+.upload-zone:hover { border-color: var(--mauve); background: #FFEDEA; }
+.upload-zone.filled { height: 260px; border-style: solid; border-color: var(--mauve); cursor: default; background: #1A1015; }
+.upload-zone.filled img { width: 100%; height: 100%; object-fit: contain; border-radius: 16px; }
+.upload-converting { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; background: rgba(26,16,21,0.7); border-radius: 16px; }
+.upload-converting-text { font-size: 12px; color: rgba(255,255,255,0.85); font-family: 'Noto Sans JP', sans-serif; letter-spacing: 0.06em; }
+.upload-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(46,26,32,0.5) 0%, transparent 55%); border-radius: 16px; display: flex; align-items: flex-end; justify-content: space-between; padding: 11px 13px; }
+.change-pill { font-size: 11px; font-family: 'Noto Sans JP', sans-serif; color: white; background: rgba(255,255,255,0.15); border: 0.5px solid rgba(255,255,255,0.38); border-radius: 20px; padding: 4px 14px; cursor: pointer; }
+.preview-badge { font-family: 'Syne', sans-serif; font-size: 10px; letter-spacing: 0.06em; color: rgba(255,255,255,0.88); background: rgba(138,72,88,0.65); border-radius: 20px; padding: 3px 10px; }
+.upload-row { display: flex; align-items: center; gap: 10px; }
+.upload-icon-wrap { width: 38px; height: 38px; border-radius: 50%; background: var(--white); border: 0.5px solid var(--blush); display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; }
+.upload-label { font-size: 13px; color: var(--text-mid); font-weight: 300; }
+.upload-sub { font-size: 11px; color: var(--text-light); margin-top: 1px; }
+
+/* COLOR SECTION */
+.color-section { padding: 14px 0 0; flex-shrink: 0; }
+.section-header { display: flex; align-items: center; justify-content: space-between; padding: 0 20px; margin-bottom: 9px; }
+.section-label { font-family: 'Syne', sans-serif; font-size: 10px; font-weight: 300; letter-spacing: 0.14em; color: var(--text-light); text-transform: uppercase; }
+.filter-tabs { display: flex; gap: 7px; padding: 0 18px; overflow-x: auto; scrollbar-width: none; margin-bottom: 10px; }
+.filter-tabs::-webkit-scrollbar { display: none; }
+.ftab { font-size: 12px; font-family: 'Noto Sans JP', sans-serif; font-weight: 300; padding: 5px 14px; border-radius: 20px; border: 0.5px solid var(--rose); background: transparent; color: var(--text-mid); cursor: pointer; white-space: nowrap; transition: all 0.2s; flex-shrink: 0; }
+.ftab.active { background: var(--berry); border-color: var(--berry); color: white; }
+
+/* DESIGN STRIP */
+.design-strip-outer { overflow-x: auto; overflow-y: visible; scrollbar-width: none; padding-bottom: 4px; }
+.design-strip-outer::-webkit-scrollbar { display: none; }
+.design-strip { display: flex; gap: 16px; padding: 18px 22px 18px; width: max-content; align-items: flex-end; }
+
+/* CHIP — key: only active chip gets translateY, others stay put */
+.dchip {
+  display: flex; flex-direction: column; align-items: center; gap: 7px;
+  cursor: pointer; flex-shrink: 0; position: relative;
+  /* NO transition on transform here — handled per-state */
+}
+/* active chip rises */
+.dchip.active { transform: translateY(-6px); transition: transform 0.22s; }
+/* non-active chips: snap back instantly with no hop */
+.dchip:not(.active) { transform: translateY(0); transition: transform 0.15s; }
+
+.nail-wrap { position: relative; padding: 10px; margin: -10px; }
+
+.nail-shape {
+  width: 44px; height: 55px; border-radius: 22px 22px 13px 13px;
+  border: 2px solid transparent; transition: all 0.22s;
+  position: relative; overflow: hidden; display: block;
+}
+.dchip.active .nail-shape {
+  width: 52px; height: 65px; border-color: var(--berry);
+  border-radius: 26px 26px 15px 15px; box-shadow: 0 6px 20px rgba(138,72,88,0.35);
+}
+/* shine */
+.nail-shape::before { content: ''; position: absolute; top: 10%; left: 14%; width: 10px; height: 3px; background: rgba(255,255,255,0.65); border-radius: 3px; transform: rotate(-26deg); z-index: 3; }
+/* gloss */
+.nail-shape::after { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 68% 22%, rgba(255,255,255,0.55) 0%, transparent 44%), radial-gradient(ellipse at 28% 72%, rgba(255,255,255,0.20) 0%, transparent 38%); z-index: 1; }
+
+.glow-ring { position: absolute; inset: 8px; border-radius: 28px 28px 17px 17px; pointer-events: none; opacity: 0; transition: opacity 0.22s, box-shadow 0.22s; border: 1.5px solid transparent; }
+.dchip.active .glow-ring { opacity: 1; border-color: rgba(184,112,128,0.32); box-shadow: 0 0 16px 4px rgba(184,112,128,0.18); }
+
+.sparkle-wrap { position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity 0.25s; }
+.dchip.active .sparkle-wrap { opacity: 1; }
+.sp { position: absolute; line-height: 1; color: var(--mauve); font-size: 10px; animation: sparkFloat 1.8s ease-in-out infinite; }
+.sp1 { top: 0;    left: 50%;   font-size: 9px; animation-delay: 0s;    animation-name: sparkFloatC; }
+.sp2 { top: 14px; right: 2px;  font-size: 8px; animation-delay: 0.35s; }
+.sp3 { bottom: 14px; right: 1px; font-size: 7px; animation-delay: 0.7s; }
+.sp4 { bottom: 2px; left: 50%; font-size: 8px; animation-delay: 1.05s; animation-name: sparkFloatC; }
+.sp5 { top: 16px; left: 1px;   font-size: 7px; animation-delay: 0.55s; }
+@keyframes sparkFloat  { 0%,100%{transform:translateY(0) scale(1);opacity:.45} 50%{transform:translateY(-5px) scale(1.35);opacity:1} }
+@keyframes sparkFloatC { 0%,100%{transform:translateX(-50%) translateY(0) scale(1);opacity:.45} 50%{transform:translateX(-50%) translateY(-5px) scale(1.35);opacity:1} }
+
+.dname { font-family: 'Syne', sans-serif; font-size: 10px; font-weight: 300; color: var(--text-light); letter-spacing: 0.04em; transition: color 0.2s; position: relative; z-index: 1; }
+.dchip.active .dname { color: var(--berry); }
+
+/* NAIL COLORS */
+.nc-sakura   { background: linear-gradient(155deg,#FFD0DA 15%,#FFA8B8); }
+.nc-milk     { background: linear-gradient(155deg,#FFF0F4 15%,#FFD5E2); }
+.nc-lavender { background: linear-gradient(155deg,#E5D0F8 15%,#C0A0E8); }
+.nc-sky      { background: linear-gradient(155deg,#C5E5F8 15%,#88C5E8); }
+.nc-mint     { background: linear-gradient(155deg,#B8F0D5 15%,#70D5A0); }
+.nc-butter   { background: linear-gradient(155deg,#FFF0B8 15%,#F8D560); }
+.nc-terra    { background: linear-gradient(155deg,#F8D0B5 15%,#E09570); }
+.nc-nude     { background: linear-gradient(155deg,#F5E0D0 15%,#DDB895); }
+.nc-black    { background: linear-gradient(155deg,#302840 15%,#141018); }
+.nc-coral    { background: linear-gradient(155deg,#FFBCAC 15%,#FF8870); }
+.nc-french   { background: #FFF5F0; }
+.french-tip  { position: absolute; bottom: 0; left: 0; right: 0; height: 15px; background: white; border-top: 1.5px solid #F0D5C8; z-index: 2; }
+.glitter-layer { position: absolute; inset: 0; z-index: 2; background: repeating-linear-gradient(42deg,transparent,transparent 3px,rgba(255,255,255,0.18) 3px,rgba(255,255,255,0.18) 4px); }
+
+/* ── REPAIR NAIL ICON
+   Structure (top→bottom):
+   [0–55%]  pink gel zone with heart pattern
+   [55%]    gap/lift line
+   [56–72%] lunula (white crescent arc) — clearly visible
+   [58–100%] bare regrowth (warm skin tone)
+   shine + gloss on top
+*/
+.nc-repair { background: #F2E0D0; position: relative; overflow: hidden; }
+
+/* gel zone with hearts — SVG inline as bg */
+.heart-gel {
+  position: absolute; top: 0; left: 0; right: 0; height: 58%;
+  z-index: 1;
+  background-color: #E8A0B8;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12'%3E%3Cpath d='M6 9.5C6 9.5 1 6 1 3.5a2.5 2.5 0 015 0 2.5 2.5 0 015 0C11 6 6 9.5 6 9.5z' fill='%23F8C0D0' opacity='0.7'/%3E%3C/svg%3E");
+  background-size: 12px 12px;
+  border-radius: 0; /* sharp bottom edge for clear gap */
+}
+
+/* lunula — visible crescent at top of regrowth zone */
+.repair-lunula {
+  position: absolute;
+  top: 50%; /* sits just below gel zone */
+  left: 50%; transform: translateX(-50%);
+  width: 30px; height: 16px;
+  border-radius: 50% 50% 0 0;
+  background: rgba(255,245,240,0.92);
+  border-top: 1px solid rgba(240,210,195,0.6);
+  z-index: 3;
+}
+
+/* gap line — the "lift" edge between gel and bare nail */
+.repair-gap {
+  position: absolute; top: 57%; left: 0; right: 0;
+  height: 2.5px;
+  background: linear-gradient(to right, transparent, rgba(160,90,80,0.4) 20%, rgba(160,90,80,0.4) 80%, transparent);
+  z-index: 4;
+}
+
+/* bare regrowth zone */
+.repair-bare {
+  position: absolute; bottom: 0; left: 0; right: 0; height: 44%;
+  background: linear-gradient(to top, #EDD0BC 0%, #F5E0D0 60%, transparent 100%);
+  z-index: 2;
+}
+
+/* override shine/gloss z-index for repair */
+.nc-repair::before { z-index: 6; }
+.nc-repair::after  { z-index: 5; }
+
+/* pulsing badge */
+.repair-badge-dot {
+  position: absolute; top: 8px; right: 8px;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--berry); color: white;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px; z-index: 10;
+  box-shadow: 0 2px 7px rgba(138,72,88,0.45);
+  animation: badgePulse 2s ease-in-out infinite;
+}
+.dchip-repair.active .repair-badge-dot { top: 6px; right: 6px; width: 20px; height: 20px; font-size: 10px; }
+@keyframes badgePulse { 0%,100%{box-shadow:0 2px 7px rgba(138,72,88,0.45)} 50%{box-shadow:0 2px 14px rgba(138,72,88,0.7)} }
+
+.strip-divider { width: 1px; height: 48px; background: var(--blush); flex-shrink: 0; align-self: center; margin: 0 2px; }
+.repair-label-row { display: flex; align-items: center; gap: 3px; }
+.repair-new { font-family: 'Syne', sans-serif; font-size: 8px; letter-spacing: 0.05em; color: var(--mauve); background: #F5E0DC; border-radius: 10px; padding: 1px 5px; }
+.dchip-repair.active .repair-new { background: var(--berry); color: white; }
+
+/* GEL EXPLAINER */
+.gel-explainer { margin: 0 18px 10px; background: #FFF5F2; border: 0.5px solid var(--blush); border-radius: 13px; padding: 10px 14px; display: none; gap: 10px; align-items: flex-start; flex-shrink: 0; }
+.gel-explainer.show { display: flex; }
+.gel-ex-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+.gel-ex-title { font-size: 12px; color: var(--text); font-weight: 400; margin-bottom: 2px; }
+.gel-ex-desc { font-size: 11px; color: var(--text-mid); font-weight: 300; line-height: 1.6; }
+
+/* AD INLINE */
+.ad-inline { margin: 0 18px 8px; background: var(--white); border: 0.5px solid var(--blush); border-radius: 13px; padding: 9px 14px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+.ad-badge { font-size: 9px; color: var(--text-light); letter-spacing: 0.07em; margin-bottom: 2px; }
+.ad-body { font-size: 12px; color: var(--text-mid); font-weight: 300; }
+.ad-x { width: 20px; height: 20px; border-radius: 50%; background: var(--blush); border: none; color: var(--text-light); font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+/* MAGIC BUTTON */
+.magic-wrap { padding: 6px 18px 0; flex-shrink: 0; }
+.magic-btn {
+  width: 100%; padding: 15px; background: var(--berry); color: white; border: none;
+  border-radius: 14px; font-size: 14px; font-family: 'Noto Sans JP', sans-serif;
+  font-weight: 300; letter-spacing: 0.06em; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: background 0.2s, transform 0.15s;
+}
+.magic-btn:hover { background: #7A3848; }
+.magic-btn:active { transform: scale(0.98); }
+.magic-btn:disabled { background: var(--rose); cursor: not-allowed; transform: none; }
+
+/* RESULT */
+.result-wrap { margin: 12px 18px 0; border-radius: 18px; overflow: hidden; border: 0.5px solid var(--blush); display: none; flex-shrink: 0; }
+.result-wrap.show { display: block; }
+.loading-wrap { height: 200px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; background: linear-gradient(135deg,#FFF5F2,#FDEAE4); }
+.loading-name { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 300; color: var(--mauve); letter-spacing: 0.1em; }
+.loading-step { font-size: 11px; color: var(--text-light); letter-spacing: 0.06em; }
+.dots { display: flex; gap: 7px; }
+.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--mauve); animation: pulse 1.3s ease-in-out infinite; }
+.dot:nth-child(2) { animation-delay: 0.2s; }
+.dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes pulse { 0%,60%,100%{transform:scale(0.6);opacity:.3} 30%{transform:scale(1.2);opacity:1} }
+.result-done { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 180px; gap: 7px; background: linear-gradient(135deg,#FFF5F2,#FDEAE4); }
+.result-done .big { font-size: 44px; }
+.result-done .rtitle { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 400; color: var(--berry); letter-spacing: 0.05em; }
+.result-done .rnote { font-size: 11px; color: var(--text-light); padding: 0 20px; text-align: center; line-height: 1.6; }
+.result-img { width: 100%; display: block; border-radius: 18px 18px 0 0; }
+.result-actions { display: flex; gap: 7px; padding: 10px 11px; background: white; border-top: 0.5px solid var(--blush); }
+.ract { flex: 1; padding: 10px 4px; border-radius: 11px; border: 0.5px solid var(--blush); background: var(--cream); font-size: 11px; font-family: 'Noto Sans JP', sans-serif; font-weight: 300; color: var(--text-mid); cursor: pointer; transition: background 0.15s; }
+.ract:hover { background: var(--blush); }
+.ract.primary { background: #1A1015; border-color: #1A1015; color: white; }
+.ract.primary:hover { background: #2E1A20; }
+
+/* API KEY MODAL */
+.modal-overlay { position: fixed; inset: 0; background: rgba(46,26,32,0.55); backdrop-filter: blur(6px); z-index: 100; display: none; align-items: center; justify-content: center; padding: 0 18px; }
+.modal-overlay.show { display: flex; }
+.modal-card { background: var(--cream); border-radius: 22px; padding: 26px 22px 20px; width: 100%; max-width: 354px; box-shadow: 0 20px 60px rgba(46,26,32,0.3); }
+.modal-title { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 400; color: var(--berry); margin-bottom: 5px; }
+.modal-desc { font-size: 12px; color: var(--text-mid); font-weight: 300; line-height: 1.7; margin-bottom: 14px; }
+.api-input { width: 100%; padding: 12px 14px; border: 1px solid var(--blush); border-radius: 12px; font-size: 13px; font-family: monospace; background: var(--white); color: var(--text); outline: none; transition: border-color 0.2s; margin-bottom: 14px; }
+.api-input:focus { border-color: var(--rose); }
+.modal-actions { display: flex; gap: 8px; }
+.modal-btn { flex: 1; padding: 12px; border-radius: 12px; border: 0.5px solid var(--blush); background: var(--white); font-size: 13px; font-family: 'Noto Sans JP', sans-serif; font-weight: 300; color: var(--text-mid); cursor: pointer; transition: background 0.15s; }
+.modal-btn:hover { background: var(--blush); }
+.modal-btn.primary { background: var(--berry); border-color: var(--berry); color: white; }
+.modal-btn.primary:hover { background: #7A3848; }
+.modal-hint { margin-top: 12px; text-align: center; font-size: 11px; }
+.modal-hint a { color: var(--mauve); text-decoration: none; }
+.key-indicator { width: 8px; height: 8px; border-radius: 50%; background: var(--blush); display: inline-block; margin-left: 2px; vertical-align: middle; }
+.key-indicator.set { background: #70C090; }
+
+/* SPACER + BOTTOM NAV */
+.spacer { flex: 1; min-height: 12px; }
+.bottom-nav { background: var(--white); border-top: 0.5px solid var(--blush); display: flex; padding: 10px 0 22px; position: sticky; bottom: 0; flex-shrink: 0; }
+.nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; font-family: 'Syne', sans-serif; font-size: 9px; font-weight: 300; letter-spacing: 0.08em; color: var(--text-light); transition: color 0.15s; }
+.nav-item.active { color: var(--berry); }
+.nav-item:hover { color: var(--mauve); }
+.nav-icon { font-size: 19px; }
+</style>
+</head>
+<body>
+<div class="phone">
+
+  <div class="ad-top">
+    <span class="ad-top-text">広告 · OPI ネイルカラー 公式</span>
+    <span class="ad-top-link">チェックする →</span>
+  </div>
+
+  <div class="header">
+    <div class="header-left">
+      <div class="logo">yubisaki<span>.</span></div>
+      <div class="logo-sub">tap a color · see the magic</div>
+    </div>
+    <div class="header-right">
+      <div class="h-btn">♡</div>
+      <div class="h-btn" onclick="openApiModal()" title="API設定">⚙︎<span class="key-indicator" id="keyDot"></span></div>
+    </div>
+  </div>
+
+  <div class="upload-wrap">
+    <div class="upload-zone" id="uploadZone" onclick="triggerUpload()">
+      <div class="upload-row">
+        <div class="upload-icon-wrap">✋</div>
+        <div class="upload-texts">
+          <div class="upload-label">手の写真を選ぶ</div>
+          <div class="upload-sub">JPEG · PNG · WebP · HEIC対応</div>
+        </div>
+      </div>
+      <input type="file" id="fileInput" accept="image/*,.heic,.heif" style="display:none" onchange="handleUpload(event)">
+    </div>
+  </div>
+
+  <div class="color-section">
+    <div class="section-header">
+      <span class="section-label">color & magic</span>
+    </div>
+    <div class="filter-tabs">
+      <button class="ftab active" onclick="setTab(this)">すべて</button>
+      <button class="ftab" onclick="setTab(this)">シアー</button>
+      <button class="ftab" onclick="setTab(this)">ラメ</button>
+      <button class="ftab" onclick="setTab(this)">フレンチ</button>
+      <button class="ftab" onclick="setTab(this)">秋冬</button>
+      <button class="ftab" onclick="setTab(this)">春夏</button>
+    </div>
+
+    <div class="design-strip-outer">
+      <div class="design-strip">
+
+        <!-- REPAIR -->
+        <div class="dchip dchip-repair" onclick="pick(this,'根元リペア','#E8A0B8',true)">
+          <div class="nail-wrap">
+            <div class="nail-shape nc-repair">
+              <div class="heart-gel"></div>
+              <div class="repair-lunula"></div>
+              <div class="repair-gap"></div>
+              <div class="repair-bare"></div>
+            </div>
+            <div class="repair-badge-dot">✦</div>
+            <div class="glow-ring"></div>
+            <div class="sparkle-wrap"><span class="sp sp1">✦</span><span class="sp sp2">✧</span><span class="sp sp3">✦</span><span class="sp sp4">✧</span><span class="sp sp5">✦</span></div>
+          </div>
+          <div class="repair-label-row">
+            <div class="dname">リペア</div>
+            <span class="repair-new">NEW</span>
+          </div>
+        </div>
+
+        <div class="strip-divider"></div>
+
+        <div class="dchip active" onclick="pick(this,'Sakura','#FFB8C8',false)">
+          <div class="nail-wrap"><div class="nail-shape nc-sakura"></div><div class="glow-ring"></div><div class="sparkle-wrap"><span class="sp sp1">✦</span><span class="sp sp2">✧</span><span class="sp sp3">✦</span><span class="sp sp4">✧</span><span class="sp sp5">✦</span></div></div>
+          <div class="dname">Sakura</div>
+        </div>
+        <div class="dchip" onclick="pick(this,'Milk','#FFE0EA',false)">
+          <div class="nail-wrap"><div class="nail-shape nc-milk"></div><div class="glow-ring"></div><div class="sparkle-wrap"><span class="sp sp1">✦</span><span class="sp sp2">✧</span><span class="sp sp3">✦</span><span class="sp sp4">✧</span><span class="sp sp5">✦</span></div></div>
+          <div class="dname">Milk</div>
+        </div>
+        <div class="dchip" onclick="pick(this,'Lavender','#C8A8E8',false)">
+          <div class="nail-wrap"><div class="nail-shape nc-lavender"></div><div class="glow-ring"></div><div class="sparkle-wrap"><span class="sp sp1">✦</span><span class="sp sp2">✧</span><span class="sp sp3">✦</span><span class="sp sp4">✧</span><span class="sp sp5">✦</span></div></div>
+          <div class="dname">Lavender</div>
+        </div>
+        <div class="dchip" onclick="pick(this,'Sky','#90C8E8',false)">
+          <div class="nail-wrap"><div class="nail-shape nc-sky"></div><div class="glow-ring"></div><div class="sparkle-wrap"><span class="sp sp1">✦</span><span class="sp sp2">✧</span><span class="sp sp3">✦</span><span class="sp sp4">✧</span><span class="sp sp5">✦</span></div></div>
+          <div class="dname">Sky</div>
+        </div>
+        <div class="dchip" onclick="pick(this,'Mint','#80D8A8',false)">
+          <div class="nail-wrap"><div class="nail-shape nc-mint"></div><div class="glow-ring"></div><div class="sparkle-wrap"><span class="sp sp1">✦</span><span class="sp sp2">✧</span><span class="sp sp3">✦</span><span class="sp sp4">✧</span><span class="sp sp5">✦</span></div></div>
+          <div class="dname">Mint</div>
+        </div>
+        <div class="dchip" onclick="pick(this,'Butter','#F8D060',false)">
+          <div class="nail-wrap"><div class="nail-shape nc-butter"><div class="glitter-layer"></div></div><div class="glow-ring"></div><div class="sparkle-wrap"><span class="sp sp1">✦</span><span class="sp sp2">✧</span><span class="sp sp3">✦</span><span class="sp sp4">✧</span><span class="sp sp5">✦</span></div></div>
+          <div class="dname">Butter</div>
+        </div>
+        <div class="dchip" onclick="pick(this,'French','#FFF0E8',false)">
+          <div class="nail-wrap"><div class="nail-shape nc-french"><div class="french-tip"></div></div><div class="glow-ring"></div><div class="sparkle-wrap"><span class="sp sp1">✦</span><span class="sp sp2">✧</span><span class="sp sp3">✦</span><span class="sp sp4">✧</span><span class="sp sp5">✦</span></div></div>
+          <div class="dname">French</div>
+        </div>
+        <div class="dchip" onclick="pick(this,'Terra','#E09870',false)">
+          <div class="nail-wrap"><div class="nail-shape nc-terra"></div><div class="glow-ring"></div><div class="sparkle-wrap"><span class="sp sp1">✦</span><span class="sp sp2">✧</span><span class="sp sp3">✦</span><span class="sp sp4">✧</span><span class="sp sp5">✦</span></div></div>
+          <div class="dname">Terra</div>
+        </div>
+        <div class="dchip" onclick="pick(this,'Nude','#DDB895',false)">
+          <div class="nail-wrap"><div class="nail-shape nc-nude"></div><div class="glow-ring"></div><div class="sparkle-wrap"><span class="sp sp1">✦</span><span class="sp sp2">✧</span><span class="sp sp3">✦</span><span class="sp sp4">✧</span><span class="sp sp5">✦</span></div></div>
+          <div class="dname">Nude</div>
+        </div>
+        <div class="dchip" onclick="pick(this,'Noir','#201828',false)">
+          <div class="nail-wrap"><div class="nail-shape nc-black"><div class="glitter-layer"></div></div><div class="glow-ring"></div><div class="sparkle-wrap"><span class="sp sp1">✦</span><span class="sp sp2">✧</span><span class="sp sp3">✦</span><span class="sp sp4">✧</span><span class="sp sp5">✦</span></div></div>
+          <div class="dname">Noir</div>
+        </div>
+        <div class="dchip" onclick="pick(this,'Coral','#FF8870',false)">
+          <div class="nail-wrap"><div class="nail-shape nc-coral"></div><div class="glow-ring"></div><div class="sparkle-wrap"><span class="sp sp1">✦</span><span class="sp sp2">✧</span><span class="sp sp3">✦</span><span class="sp sp4">✧</span><span class="sp sp5">✦</span></div></div>
+          <div class="dname">Coral</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="gel-explainer" id="gelExplainer">
+    <div class="gel-ex-icon">✨</div>
+    <div>
+      <div class="gel-ex-title">根元の隙間をきれいに埋めて合成</div>
+      <div class="gel-ex-desc">ジェルが伸びてきた写真でもOK。根元の素爪部分を自然に補正してからカラーを合成します。</div>
+    </div>
+  </div>
+
+  <div class="ad-inline" id="adInline">
+    <div>
+      <div class="ad-badge">AD</div>
+      <div class="ad-body">💅 渋谷ネイルサロン COCO · 初回30%OFF</div>
+    </div>
+    <button class="ad-x" onclick="document.getElementById('adInline').style.display='none'">×</button>
+  </div>
+
+  <div class="magic-wrap">
+    <button class="magic-btn" id="magicBtn" onclick="doMagic()">
+      <span>✦</span>
+      <span id="magicLabel">保存用に仕上げる</span>
+    </button>
+  </div>
+
+  <div class="result-wrap" id="resultWrap">
+    <div id="resultContent"></div>
+    <div class="result-actions">
+      <button class="ract" onclick="resetResult()">↩ やり直す</button>
+      <button class="ract" onclick="pickAnotherColor()">✦ 別カラー</button>
+      <button class="ract primary" onclick="saveResult()">保存 ↓</button>
+    </div>
+  </div>
+
+  <div class="spacer"></div>
+
+  <!-- API KEY MODAL -->
+  <div class="modal-overlay" id="apiModal">
+    <div class="modal-card">
+      <div class="modal-title">Replicate API Token</div>
+      <div class="modal-desc">爪カラーをAIで合成するには、ReplicateのAPIトークンが必要です。トークンはこのデバイスにのみ保存されます。</div>
+      <input type="password" id="apiKeyInput" class="api-input" placeholder="r8_xxxxxxxxxxxxxxxxxxxx" autocomplete="off">
+      <div class="modal-actions">
+        <button class="modal-btn" onclick="closeApiModal()">キャンセル</button>
+        <button class="modal-btn primary" onclick="saveApiKey()">設定する</button>
+      </div>
+      <div class="modal-hint"><a href="https://replicate.com/account/api-tokens" target="_blank">APIトークンを発行する →</a></div>
+    </div>
+  </div>
+
+  <div class="bottom-nav">
+    <div class="nav-item active"><div class="nav-icon">✦</div><div>magic</div></div>
+    <div class="nav-item"><div class="nav-icon">♡</div><div>saved</div></div>
+    <div class="nav-item"><div class="nav-icon">⊟</div><div>history</div></div>
+    <div class="nav-item"><div class="nav-icon">◉</div><div>mypage</div></div>
+  </div>
+
+</div>
+<script>
+let chosen='Sakura', chosenColor='#FFB8C8', isGelMode=false, hasImage=false;
+let originalImageDataUrl=null, lastResultUrl=null;
+
+// ── API KEY ──────────────────────────────────────────────
+function getApiKey(){ return localStorage.getItem('replicate_api_key')||''; }
+
+function openApiModal(){
+  const k=getApiKey();
+  document.getElementById('apiKeyInput').value=k;
+  document.getElementById('apiModal').classList.add('show');
+}
+function closeApiModal(){ document.getElementById('apiModal').classList.remove('show'); }
+function saveApiKey(){
+  const v=document.getElementById('apiKeyInput').value.trim();
+  if(v){ localStorage.setItem('replicate_api_key',v); }
+  else { localStorage.removeItem('replicate_api_key'); }
+  updateKeyDot();
+  closeApiModal();
+}
+function updateKeyDot(){
+  const dot=document.getElementById('keyDot');
+  if(dot) dot.className='key-indicator'+(getApiKey()?'set ':' ').trimEnd()+(getApiKey()?'set':'');
+  if(dot) dot.classList.toggle('set',!!getApiKey());
+}
+document.getElementById('apiModal').addEventListener('click',e=>{ if(e.target===e.currentTarget) closeApiModal(); });
+
+// ── UPLOAD ───────────────────────────────────────────────
+function triggerUpload(){ document.getElementById('fileInput').click(); }
+
+let previewObjectUrl=null;
+
+async function handleUpload(e){
+  const file=e.target.files[0]; if(!file) return;
+
+  const isHeic=file.type==='image/heic'||file.type==='image/heif'
+    ||/\.(heic|heif)$/i.test(file.name);
+  const isImage=file.type.startsWith('image/')||isHeic;
+  if(!isImage){
+    showUploadError('画像ファイルを選択してください（JPEG・PNG・WebP・HEIC対応）');
+    return;
+  }
+
+  // まずブラウザのネイティブ読み込みを試みる（SafariはHEICをそのまま読める）
+  const canLoadDirect=()=>new Promise(resolve=>{
+    const url=URL.createObjectURL(file);
+    const img=new Image();
+    img.onload=()=>{ URL.revokeObjectURL(url); resolve(true); };
+    img.onerror=()=>{ URL.revokeObjectURL(url); resolve(false); };
+    img.src=url;
+  });
+
+  let blob=file;
+  const direct=await canLoadDirect();
+
+  if(!direct && isHeic){
+    showConvertingOverlay();
+    try{
+      const result=await heic2any({blob:file,toType:'image/jpeg',quality:0.88});
+      blob=Array.isArray(result)?result[0]:result;
+      hideConvertingOverlay();
+    }catch(_){
+      hideConvertingOverlay();
+      showUploadError('HEIC変換に失敗しました。\niPhoneの場合は「設定 → カメラ → フォーマット → 互換性優先」に変更するか、JPEGで共有してください。');
+      return;
+    }
+  } else if(!direct){
+    showUploadError('この画像は読み込めませんでした。JPEG・PNG形式でお試しください。');
+    return;
+  }
+
+  processBlob(blob);
+}
+
+function showConvertingOverlay(){
+  const z=document.getElementById('uploadZone');
+  const d=document.createElement('div');
+  d.className='upload-converting'; d.id='convertingOverlay';
+  d.innerHTML='<div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div><div class="upload-converting-text">HEIC を変換中...</div>';
+  z.appendChild(d);
+}
+function hideConvertingOverlay(){ const d=document.getElementById('convertingOverlay'); if(d) d.remove(); }
+
+function processBlob(blob){
+  if(previewObjectUrl) URL.revokeObjectURL(previewObjectUrl);
+  previewObjectUrl=URL.createObjectURL(blob);
+  const img=new Image();
+  img.onload=()=>{
+    // API送信用に圧縮（768px・品質0.80でbase64を~200KB以下に抑える）
+    const maxSize=768;
+    let w=img.width,h=img.height;
+    if(w>maxSize||h>maxSize){
+      if(w>h){h=Math.round(h*maxSize/w);w=maxSize;}
+      else   {w=Math.round(w*maxSize/h);h=maxSize;}
+    }
+    const c=document.createElement('canvas');
+    c.width=w;c.height=h;
+    c.getContext('2d').drawImage(img,0,0,w,h);
+    originalImageDataUrl=c.toDataURL('image/jpeg',0.80);
+    hasImage=true;
+    const z=document.getElementById('uploadZone');
+    z.onclick=null;z.classList.add('filled');
+    z.innerHTML=`<img src="${previewObjectUrl}" alt="hand"><div class="upload-overlay"><button class="change-pill" onclick="resetUpload()">写真を変える</button><span class="preview-badge">選択中</span></div>`;
+  };
+  img.onerror=()=>showUploadError('画像の読み込みに失敗しました。別のファイルをお試しください。');
+  img.src=previewObjectUrl;
+}
+
+function showUploadError(msg){
+  alert(msg);
+  const fi=document.getElementById('fileInput');
+  if(fi) fi.value='';
+}
+
+function resetUpload(){
+  hasImage=false;originalImageDataUrl=null;
+  if(previewObjectUrl){ URL.revokeObjectURL(previewObjectUrl); previewObjectUrl=null; }
+  const z=document.getElementById('uploadZone');
+  z.classList.remove('filled');z.onclick=triggerUpload;
+  z.innerHTML=`<div class="upload-row"><div class="upload-icon-wrap">✋</div><div class="upload-texts"><div class="upload-label">手の写真を選ぶ</div><div class="upload-sub">JPEG · PNG · WebP · HEIC対応</div></div></div><input type="file" id="fileInput" accept="image/*,.heic,.heif" style="display:none" onchange="handleUpload(event)">`;
+}
+
+// ── COLOR PICKER ─────────────────────────────────────────
+function pick(el,name,color,gel){
+  document.querySelectorAll('.dchip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  chosen=name; chosenColor=color; isGelMode=gel;
+  el.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
+  const ex=document.getElementById('gelExplainer');
+  const lbl=document.getElementById('magicLabel');
+  if(gel){ ex.classList.add('show'); lbl.textContent='根元を直して仕上げる'; }
+  else   { ex.classList.remove('show'); lbl.textContent='保存用に仕上げる'; }
+}
+
+function setTab(el){
+  document.querySelectorAll('.ftab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// ── COLOR → PROMPT ───────────────────────────────────────
+const COLOR_PROMPTS={
+  'Sakura':    'soft cherry blossom pink nail polish, glossy finish',
+  'Milk':      'sheer milky white-pink nail polish, translucent sheer finish',
+  'Lavender':  'pastel lavender purple nail polish, glossy finish',
+  'Sky':       'light sky blue nail polish, glossy finish',
+  'Mint':      'soft mint green nail polish, glossy finish',
+  'Butter':    'golden yellow nail polish with fine glitter shimmer',
+  'French':    'french manicure: natural pink base with clean white tips, salon quality',
+  'Terra':     'terracotta orange nail polish, glossy finish',
+  'Nude':      'warm nude beige nail polish, glossy finish',
+  'Noir':      'deep glossy black nail polish with subtle shimmer',
+  'Coral':     'bright coral orange-red nail polish, glossy finish',
+  '根元リペア': 'pink gel nails with the natural nail regrowth at the base seamlessly blended, professional gel nail repair',
+};
+
+function getPrompt(name,gel){
+  const base=COLOR_PROMPTS[name]||`${name} nail polish, glossy finish`;
+  const prefix=gel
+    ?`Apply ${base} to all fingernails, fill in and blend the natural regrowth gap at the nail base naturally.`
+    :`Apply ${base} to all fingernails.`;
+  return `${prefix} Keep the hand position, skin tone, background, and lighting completely unchanged. Photorealistic, professional nail salon quality.`;
+}
+
+// ── REPLICATE API ─────────────────────────────────────────
+async function callReplicate(apiKey, imageDataUrl, prompt){
+  let res;
+  try{
+    res=await fetch('https://api.replicate.com/v1/models/black-forest-labs/flux-kontext-pro/predictions',{
+      method:'POST',
+      headers:{
+        'Authorization':`Bearer ${apiKey}`,
+        'Content-Type':'application/json'
+        // Prefer:wait ヘッダーは CORS preflight で拒否されるため使わない
+      },
+      body:JSON.stringify({
+        input:{
+          prompt,
+          input_image: imageDataUrl,
+          output_format:'webp',
+          safety_tolerance:6
+        }
+      })
+    });
+  }catch(networkErr){
+    throw new Error('ネットワークエラー。インターネット接続とAPIトークンを確認してください。');
+  }
+  if(!res.ok){
+    let msg=`HTTP ${res.status}`;
+    try{ const j=await res.json(); msg=j.detail||j.error||msg; }catch(_){}
+    if(res.status===401) msg='APIトークンが無効です。⚙︎ から再設定してください。';
+    throw new Error(msg);
+  }
+  const pred=await res.json();
+  if(pred.status==='succeeded') return Array.isArray(pred.output)?pred.output[0]:pred.output;
+  if(pred.status==='failed') throw new Error(pred.error||'生成に失敗しました');
+
+  // ポーリング（2秒間隔・最大90秒）
+  const pollUrl=pred.urls?.get;
+  if(!pollUrl) throw new Error('polling URL が取得できませんでした');
+  for(let i=0;i<45;i++){
+    await new Promise(r=>setTimeout(r,2000));
+    const p=await fetch(pollUrl,{headers:{'Authorization':`Bearer ${apiKey}`}});
+    const j=await p.json();
+    if(j.status==='succeeded') return Array.isArray(j.output)?j.output[0]:j.output;
+    if(j.status==='failed') throw new Error(j.error||'生成に失敗しました');
+  }
+  throw new Error('タイムアウトしました（90秒）');
+}
+
+// ── MAGIC BUTTON ─────────────────────────────────────────
+async function doMagic(){
+  if(!hasImage){
+    alert('まず手の写真をアップロードしてください');
+    return;
+  }
+  const apiKey=getApiKey();
+  if(!apiKey){ openApiModal(); return; }
+
+  const btn=document.getElementById('magicBtn');
+  const wrap=document.getElementById('resultWrap');
+  const content=document.getElementById('resultContent');
+  lastResultUrl=null;
+
+  btn.disabled=true;
+  btn.innerHTML='<span>✦</span><span>AIが仕上げています...</span>';
+  wrap.classList.add('show');
+  const label=isGelMode?'リペア + '+chosen:chosen;
+  content.innerHTML=`<div class="loading-wrap"><div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div><div class="loading-name">${label}</div><div class="loading-step">FLUX Kontext で合成中...</div></div>`;
+  wrap.scrollIntoView({behavior:'smooth',block:'nearest'});
+
+  try{
+    const prompt=getPrompt(chosen,isGelMode);
+    const outputUrl=await callReplicate(apiKey,originalImageDataUrl,prompt);
+    lastResultUrl=outputUrl;
+    content.innerHTML=`<img class="result-img" src="${outputUrl}" alt="${label}">`;
+  }catch(err){
+    const isAuth=err.message.includes('401')||err.message.toLowerCase().includes('auth')||err.message.toLowerCase().includes('token');
+    content.innerHTML=`<div class="result-done"><div class="big">😔</div><div class="rtitle">エラー</div><div class="rnote">${err.message}${isAuth?'<br><br>⚙︎ ボタンからAPIトークンを確認してください':''}</div></div>`;
+  }
+
+  btn.disabled=false;
+  btn.innerHTML=`<span>✦</span><span id="magicLabel">${isGelMode?'根元を直して仕上げる':'保存用に仕上げる'}</span>`;
+}
+
+function resetResult(){
+  document.getElementById('resultWrap').classList.remove('show');
+  const btn=document.getElementById('magicBtn');
+  btn.disabled=false;
+  btn.innerHTML=`<span>✦</span><span id="magicLabel">${isGelMode?'根元を直して仕上げる':'保存用に仕上げる'}</span>`;
+  lastResultUrl=null;
+}
+
+async function saveResult(){
+  if(!lastResultUrl){ alert('先に合成を実行してください'); return; }
+  try{
+    const res=await fetch(lastResultUrl);
+    const blob=await res.blob();
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download=`yubisaki_${chosen}_${Date.now()}.webp`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }catch(_){
+    // fallback: open in new tab
+    window.open(lastResultUrl,'_blank');
+  }
+}
+
+function pickAnotherColor(){
+  document.getElementById('resultWrap').classList.remove('show');
+  lastResultUrl=null;
+  document.querySelector('.design-strip-outer').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+// Init
+updateKeyDot();
+</script>
+</body>
+</html>
