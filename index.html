@@ -632,36 +632,37 @@ function getPrompt(name,gel){
   return `${prefix} Keep the hand position, skin tone, background, and lighting completely unchanged. Photorealistic, professional nail salon quality.`;
 }
 
-// ── REPLICATE API ─────────────────────────────────────────
-async function callReplicate(apiKey, imageDataUrl, prompt){
-  let res;
-  try{
-    res=await fetch('https://api.replicate.com/v1/models/black-forest-labs/flux-kontext-pro/predictions',{
-      method:'POST',
-      headers:{
-        'Authorization':`Bearer ${apiKey}`,
-        'Content-Type':'application/json'
-        // Prefer:wait ヘッダーは CORS preflight で拒否されるため使わない
-      },
-      body:JSON.stringify({
-        input:{
-          prompt,
-          input_image: imageDataUrl,
-          output_format:'webp',
-          safety_tolerance:6
-        }
-      })
-    });
-  }catch(networkErr){
-    throw new Error('ネットワークエラー。インターネット接続とAPIトークンを確認してください。');
-  }
+// ── REPLICATE API (Cloudflare Worker proxy経由) ───────────
+const PROXY='https://yubisaki-proxy.pepper-ham-steak.workers.dev';
+const REPLICATE_PREDICT='https://api.replicate.com/v1/models/black-forest-labs/flux-kontext-pro/predictions';
+
+async function proxyFetch(apiKey, targetUrl, method='GET', body=null){
+  const opts={
+    method,
+    headers:{'Content-Type':'application/json','X-Replicate-Token':apiKey}
+  };
+  if(body) opts.body=JSON.stringify(body);
+  const res=await fetch(`${PROXY}?url=${encodeURIComponent(targetUrl)}`,opts);
   if(!res.ok){
     let msg=`HTTP ${res.status}`;
     try{ const j=await res.json(); msg=j.detail||j.error||msg; }catch(_){}
     if(res.status===401) msg='APIトークンが無効です。⚙︎ から再設定してください。';
     throw new Error(msg);
   }
-  const pred=await res.json();
+  return res.json();
+}
+
+async function callReplicate(apiKey, imageDataUrl, prompt){
+  let pred;
+  try{
+    pred=await proxyFetch(apiKey, REPLICATE_PREDICT, 'POST',{
+      input:{ prompt, input_image:imageDataUrl, output_format:'webp', safety_tolerance:6 }
+    });
+  }catch(e){
+    if(e.message.startsWith('HTTP')||e.message.includes('トークン')) throw e;
+    throw new Error('ネットワークエラー。インターネット接続を確認してください。');
+  }
+
   if(pred.status==='succeeded') return Array.isArray(pred.output)?pred.output[0]:pred.output;
   if(pred.status==='failed') throw new Error(pred.error||'生成に失敗しました');
 
@@ -670,8 +671,7 @@ async function callReplicate(apiKey, imageDataUrl, prompt){
   if(!pollUrl) throw new Error('polling URL が取得できませんでした');
   for(let i=0;i<45;i++){
     await new Promise(r=>setTimeout(r,2000));
-    const p=await fetch(pollUrl,{headers:{'Authorization':`Bearer ${apiKey}`}});
-    const j=await p.json();
+    const j=await proxyFetch(apiKey, pollUrl);
     if(j.status==='succeeded') return Array.isArray(j.output)?j.output[0]:j.output;
     if(j.status==='failed') throw new Error(j.error||'生成に失敗しました');
   }
