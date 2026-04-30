@@ -688,8 +688,11 @@ function drawNailCanvas(canvas, landmarks, imgRect, color){
   const [r,g,b]=hexToRgb(color.length===7?color:'#E8A0B8');
   [[4,3],[8,7],[12,11],[16,15],[20,19]].forEach(([ti,bi])=>{
     const tip=landmarks[ti], base=landmarks[bi];
+    // 爪はtip〜DIPの約55%の範囲（先端から根元方向へ）
+    const NAIL_FRAC=0.55;
+    const adjBase={x:tip.x+(base.x-tip.x)*NAIL_FRAC, y:tip.y+(base.y-tip.y)*NAIL_FRAC};
     const tx=imgRect.x+tip.x*imgRect.w,  ty=imgRect.y+tip.y*imgRect.h;
-    const bx=imgRect.x+base.x*imgRect.w, by=imgRect.y+base.y*imgRect.h;
+    const bx=imgRect.x+adjBase.x*imgRect.w, by=imgRect.y+adjBase.y*imgRect.h;
     const dx=tx-bx, dy=ty-by;
     const len=Math.sqrt(dx*dx+dy*dy);
     const nW=len*0.70, hW=nW/2, hH=len/2, rad=hW*0.55;
@@ -819,7 +822,7 @@ const COLOR_PROMPTS={
 
 function getPrompt(name,gel){
   if(name==='根元リペア'){
-    return 'This person has grown-out gel nails where bare natural nail is visible at the base/root. Seamlessly extend and blend the existing nail art, color, and design from the nail body into the bare regrowth area at the base of each nail. The nail tips and existing nail art must remain completely unchanged. Only fill the bare grown-out root area. Keep all fingers, skin, background, and lighting exactly as-is. Photorealistic, professional nail salon result.';
+    return 'Look carefully at each fingernail in this photo. Each nail has a colored/designed gel nail on most of the nail, but there is a small visible strip of bare natural nail at the very base near the cuticle where the nail has grown out. Your only task is to fill that thin bare natural strip at the base of each nail with the exact same color and pattern as the rest of that nail, so it looks like a freshly done nail with no regrowth. Do NOT change the nail tips, do NOT change the nail art or design, do NOT repaint the whole nail. Only blend the tiny bare root area to match. Keep all skin, fingers, rings, background, and lighting completely unchanged. Photorealistic result.';
   }
   const color=COLOR_PROMPTS[name]||name;
   let finish='glossy';
