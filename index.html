@@ -222,14 +222,16 @@ body {
 .dchip-repair.active .repair-new { background: var(--berry); color: white; }
 
 /* FINISH SLIDERS */
-.finish-sliders { margin: 6px 18px 8px; background: var(--white); border: 0.5px solid var(--blush); border-radius: 13px; padding: 10px 14px; display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; }
-.slider-row { display: flex; align-items: center; gap: 8px; }
+.finish-sliders { margin: 6px 18px 8px; background: var(--white); border: 0.5px solid var(--blush); border-radius: 13px; padding: 14px 16px; display: flex; flex-direction: column; gap: 16px; flex-shrink: 0; }
+.finish-sliders.hidden { display: none; }
+.slider-row { display: flex; align-items: center; gap: 10px; }
 .slider-label { font-size: 11px; color: var(--text-mid); font-weight: 300; min-width: 44px; }
-.finish-ends { display: flex; justify-content: space-between; font-size: 9px; color: var(--text-light); }
-.nail-slider { flex: 1; -webkit-appearance: none; height: 3px; border-radius: 3px; background: var(--blush); outline: none; cursor: pointer; }
-.nail-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: var(--berry); cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,0.15); }
-.slider-val { font-size: 10px; color: var(--mauve); min-width: 28px; text-align: right; }
-.finish-col { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.finish-ends { display: flex; justify-content: space-between; font-size: 9px; color: var(--text-light); margin-top: 4px; }
+.nail-slider { flex: 1; -webkit-appearance: none; height: 4px; border-radius: 4px; background: var(--blush); outline: none; cursor: pointer; touch-action: none; }
+.nail-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 26px; height: 26px; border-radius: 50%; background: var(--berry); cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
+.nail-slider::-moz-range-thumb { width: 26px; height: 26px; border-radius: 50%; background: var(--berry); cursor: pointer; border: none; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
+.slider-val { font-size: 10px; color: var(--mauve); min-width: 32px; text-align: right; }
+.finish-col { flex: 1; display: flex; flex-direction: column; gap: 0; }
 
 /* GEL EXPLAINER */
 .gel-explainer { margin: 0 18px 10px; background: #FFF5F2; border: 0.5px solid var(--blush); border-radius: 13px; padding: 10px 14px; display: none; gap: 10px; align-items: flex-start; flex-shrink: 0; }
@@ -628,8 +630,9 @@ function pick(el,name,color,gel){
   el.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
   const ex=document.getElementById('gelExplainer');
   const lbl=document.getElementById('magicLabel');
-  if(gel){ ex.classList.add('show'); lbl.textContent='根元を直して仕上げる'; }
-  else   { ex.classList.remove('show'); lbl.textContent='保存用に仕上げる'; }
+  const fs=document.querySelector('.finish-sliders');
+  if(gel){ ex.classList.add('show'); lbl.textContent='根元を直して仕上げる'; if(fs) fs.classList.add('hidden'); }
+  else   { ex.classList.remove('show'); lbl.textContent='保存用に仕上げる'; if(fs) fs.classList.remove('hidden'); }
   updateNailCanvas(color);
 }
 
@@ -647,7 +650,7 @@ async function initMediaPipe(){
   if(typeof Hands==='undefined'){ console.warn('MediaPipe Hands not loaded'); return; }
   try{
     const h=new Hands({locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/hands/${f}`});
-    h.setOptions({maxNumHands:2,modelComplexity:1,minDetectionConfidence:0.5,minTrackingConfidence:0.5});
+    h.setOptions({maxNumHands:2,modelComplexity:1,minDetectionConfidence:0.5,minTrackingConfidence:0.5,staticImageMode:true});
     h.onResults(results=>{ if(detectResolve){ detectResolve(results); detectResolve=null; } });
     await h.initialize();
     handsModel=h;
@@ -756,17 +759,24 @@ async function detectAndDraw(imgEl, color){
 
   if(badge) badge.textContent='検出中...';
   try{
-    // imgEl をそのまま送れない場合があるため canvas 経由でコピー
+    // 640px以内にリサイズしてMediaPipeに送る
+    const MAX=640;
+    const sw=imgEl.naturalWidth||imgEl.offsetWidth||300;
+    const sh=imgEl.naturalHeight||imgEl.offsetHeight||400;
+    const scale=Math.min(MAX/sw,MAX/sh,1);
     const offscreen=document.createElement('canvas');
-    offscreen.width=imgEl.naturalWidth||imgEl.offsetWidth||300;
-    offscreen.height=imgEl.naturalHeight||imgEl.offsetHeight||400;
+    offscreen.width=Math.round(sw*scale);
+    offscreen.height=Math.round(sh*scale);
+    offscreen.style.cssText='position:fixed;top:-9999px;left:-9999px;visibility:hidden';
+    document.body.appendChild(offscreen);
     offscreen.getContext('2d').drawImage(imgEl,0,0,offscreen.width,offscreen.height);
 
-    const results=await new Promise((resolve,reject)=>{
+    const results=await new Promise((resolve)=>{
       detectResolve=resolve;
-      handsModel.send({image:offscreen}).catch(reject);
-      setTimeout(()=>{ detectResolve=null; resolve({multiHandLandmarks:[]}); },5000);
+      const tid=setTimeout(()=>{ detectResolve=null; resolve({multiHandLandmarks:[]}); },8000);
+      handsModel.send({image:offscreen}).catch(()=>{ clearTimeout(tid); detectResolve=null; resolve({multiHandLandmarks:[]}); });
     });
+    document.body.removeChild(offscreen);
 
     if(results.multiHandLandmarks&&results.multiHandLandmarks.length>0){
       lastLandmarks=results.multiHandLandmarks[0];
@@ -794,31 +804,32 @@ function updateNailCanvas(color){
 
 // ── COLOR → PROMPT ───────────────────────────────────────
 const COLOR_PROMPTS={
-  'Sakura':    'soft cherry blossom pink nail polish, glossy finish',
-  'Milk':      'sheer milky white-pink nail polish, translucent sheer finish',
-  'Lavender':  'pastel lavender purple nail polish, glossy finish',
-  'Sky':       'light sky blue nail polish, glossy finish',
-  'Mint':      'soft mint green nail polish, glossy finish',
-  'Butter':    'golden yellow nail polish with fine glitter shimmer',
-  'French':    'french manicure: natural pink base with clean white tips, salon quality',
-  'Terra':     'terracotta orange nail polish, glossy finish',
-  'Nude':      'warm nude beige nail polish, glossy finish',
-  'Noir':      'deep glossy black nail polish with subtle shimmer',
-  'Coral':     'bright coral orange-red nail polish, glossy finish',
-  '根元リペア': 'nail repair: preserve the existing nail art, color and design on every nail exactly as-is, only fill the visible bare natural nail regrowth at the root/base with matching gel color to blend seamlessly. Do not alter the nail tips or existing nail art.',
+  'Sakura':    'soft cherry blossom pink',
+  'Milk':      'sheer milky white-pink',
+  'Lavender':  'pastel lavender purple',
+  'Sky':       'light sky blue',
+  'Mint':      'soft mint green',
+  'Butter':    'golden yellow with fine glitter shimmer',
+  'French':    'french manicure with natural pink base and clean white tips',
+  'Terra':     'terracotta orange',
+  'Nude':      'warm nude beige',
+  'Noir':      'deep black with subtle shimmer',
+  'Coral':     'bright coral orange-red',
 };
 
 function getPrompt(name,gel){
-  let base=COLOR_PROMPTS[name]||`${name} nail polish, glossy finish`;
-  if(name!=='根元リペア'){
-    if(nailGloss<0.25) base=base.replace(/glossy finish|translucent sheer finish/g,'matte finish');
-    else if(nailGloss>0.75) base=base.replace(/glossy finish/g,'ultra glossy glass-like jelly finish');
-    if(nailOpacity<0.5) base=base.replace('nail polish','sheer translucent nail polish');
+  if(name==='根元リペア'){
+    return 'This person has grown-out gel nails where bare natural nail is visible at the base/root. Seamlessly extend and blend the existing nail art, color, and design from the nail body into the bare regrowth area at the base of each nail. The nail tips and existing nail art must remain completely unchanged. Only fill the bare grown-out root area. Keep all fingers, skin, background, and lighting exactly as-is. Photorealistic, professional nail salon result.';
   }
-  const prefix=gel&&name!=='根元リペア'
-    ?`Apply ${base} to all fingernails, fill in and blend the natural regrowth gap at the nail base naturally.`
-    :`Apply ${base} to all fingernails.`;
-  return `${prefix} Keep the hand position, skin tone, background, and lighting completely unchanged. Photorealistic, professional nail salon quality.`;
+  const color=COLOR_PROMPTS[name]||name;
+  let finish='glossy';
+  if(nailGloss<0.25) finish='matte';
+  else if(nailGloss>0.75) finish='ultra glossy glass-like jelly';
+  const opacity=nailOpacity<0.5?'sheer semi-transparent':'';
+  const prefix=gel
+    ?`Naturally recolor all fingernails with ${opacity} ${color} gel nail polish, ${finish} finish, seamlessly filling the natural regrowth gap at each nail base.`
+    :`Naturally recolor all fingernails with ${opacity} ${color} nail polish, ${finish} finish.`;
+  return `${prefix} Preserve the natural nail texture, ridges, and realistic light reflections on each nail. Keep the hand position, skin tone, background, and lighting completely unchanged. Photorealistic, professional salon quality result.`;
 }
 
 // ── REPLICATE API (Cloudflare Worker proxy経由) ───────────
